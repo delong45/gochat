@@ -15,10 +15,10 @@ import (
 
 const (
 	VERSION		= "0.0.1"
-	WXURL       = "https://qyapi.weixin.qq.com/cgi-bin/"
-	WXINURL     = "http://qyapi.weixin.qq.com/cgi-bin/xxx/"
-	CORPID      = "test"
-	SECRET      = "test"
+	WXURL       = "http://in.qyapi.weixin.qq.com/cgi-bin/"
+	WXINURL     = "http://in.qyapi.weixin.qq.com/cgi-bin/tencent/"
+	CORPID      = ""
+	SECRET      = ""
 	CONTENT     = "This is gochat robot, just for testing, ignore it.."
 	CHATID      = "wxzc"
 )
@@ -107,7 +107,7 @@ func getToken(corpid string, secret string) (string, error) {
 }
 
 func convertToUserid(token string, nameList []string) ([]UserInfo, error){
-	baseurl := WXINURL + "user/convert_to_name"
+	baseurl := WXINURL + "user/convert_to_userid"
 	u, _ := url.Parse(baseurl)
 	q := u.Query()
 	q.Set("access_token", token)
@@ -260,8 +260,8 @@ func createChatTX(name string, userList string) {
 		log.Fatal(err)
 	}
 	var list []string
-	for i, user := range users {
-		list[i] = user.Userid
+	for _, user := range users {
+		list = append(list, user.Userid)
 	}
 
 	chatId, err := createChat(token, name, list)
@@ -284,8 +284,8 @@ func updateChatTX(id string, name string, addList string, delList string) {
 		log.Fatal(err)
 	}
 	var addlist []string
-	for i, addUser := range addUsers {
-		addlist[i] = addUser.Userid
+	for _, addUser := range addUsers {
+		addlist = append(addlist, addUser.Userid)
 	}
 
 	delUsers, err := convertToUserid(token, strings.Split(delList, ","))
@@ -293,8 +293,8 @@ func updateChatTX(id string, name string, addList string, delList string) {
 		log.Fatal(err)
 	}
 	var dellist []string
-	for i, delUser := range delUsers {
-		dellist[i] = delUser.Userid
+	for _, delUser := range delUsers {
+		dellist = append(dellist, delUser.Userid)
 	}
 
 	err = updateChat(token, id, name, addlist, dellist)
