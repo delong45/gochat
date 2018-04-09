@@ -16,10 +16,11 @@ import (
 const (
 	VERSION		= "0.0.1"
 	WXURL       = "https://qyapi.weixin.qq.com/cgi-bin/"
-	WXINURL     = "http://xxx.qyapi.weixin.qq.com/"
-	CORPID      = "xxxxx"
-	SECRET      = "xxxxx"
+	WXINURL     = "http://qyapi.weixin.qq.com/cgi-bin/xxx/"
+	CORPID      = "test"
+	SECRET      = "test"
 	CONTENT     = "This is gochat robot, just for testing, ignore it.."
+	CHATID      = "wxzc"
 )
 
 type CreateChat struct {
@@ -254,7 +255,16 @@ func createChatTX(name string, userList string) {
 	}
 	fmt.Println(token)
 
-	chatId, err := createChat(token, name, strings.Split(userList, ","))
+	users, err := convertToUserid(token, strings.Split(userList, ","))
+	if err != nil {
+		log.Fatal(err)
+	}
+	var list []string
+	for i, user := range users {
+		list[i] = user.Userid
+	}
+
+	chatId, err := createChat(token, name, list)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -269,7 +279,25 @@ func updateChatTX(id string, name string, addList string, delList string) {
 	}
 	fmt.Println(token)
 
-	err = updateChat(token, id, name, strings.Split(addList, ","), strings.Split(delList, ","))
+	addUsers, err := convertToUserid(token, strings.Split(addList, ","))
+	if err != nil {
+		log.Fatal(err)
+	}
+	var addlist []string
+	for i, addUser := range addUsers {
+		addlist[i] = addUser.Userid
+	}
+
+	delUsers, err := convertToUserid(token, strings.Split(delList, ","))
+	if err != nil {
+		log.Fatal(err)
+	}
+	var dellist []string
+	for i, delUser := range delUsers {
+		dellist[i] = delUser.Userid
+	}
+
+	err = updateChat(token, id, name, addlist, dellist)
 	if err != nil {
 		log.Fatal(err)
 	}
