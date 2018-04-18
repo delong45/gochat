@@ -30,7 +30,7 @@ type CreateChat struct {
 }
 
 type UpdateChat struct {
-	Chatid	     string	   `json:"chatid"`
+	Chatid	     string    `json:"chatid"`
 	Name         string    `json:"name"`
 	AddUserList  []string  `json:"add_user_list"`
 	DelUserList  []string  `json:"del_user_list"`
@@ -41,9 +41,9 @@ type TextChat struct {
 		Type	string  `json:"type"`
 		Id	    string  `json:"id"`
 	} `json:"receiver"`
-	Msgtype		string `json:"msgtype"`
+	Msgtype		string  `json:"msgtype"`
 	Text struct {
-		Content string `json:"content"`
+		Content string  `json:"content"`
 	} `json:"text"`
 }
 
@@ -86,10 +86,10 @@ type StaffInfo struct {
 }
 
 type Config struct {
-	Chatid				string
-	StaffList			[]StaffInfo
-	NoticeDuty			string
-	NoticePerson		string
+	Chatid              string
+	StaffList           []StaffInfo
+	NoticeDuty          string
+	NoticePerson        string
 	NoticeDailyReport   string
 	NoticeWeekReport    string
 }
