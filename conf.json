@@ -1,0 +1,10 @@
+{
+    "Chatid": "ww123",
+    "StaffList": [
+                    {"Name":"daltonli", "Phone":"15210836726"}
+                 ],
+    "NoticeDuty": "本周CFS值班同学是@",
+    "NoticePerson": "本周由您负责CFS的值班工作，请注意遵守值班制度，修改helper签名及自动回复，并修改群公告信息，谢谢",
+    "NoticeDailyReport": "请发送本日CFS值班日报",
+    "NoticeWeekReport": "请发送上周CFS值班周报"
+}

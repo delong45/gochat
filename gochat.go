@@ -11,10 +11,11 @@ import (
 	"bytes"
 	"os"
 	"strings"
+	"strconv"
 )
 
 const (
-	VERSION		= "0.0.1"
+	VERSION     = "0.0.1"
 	WXURL       = "http://in.qyapi.weixin.qq.com/cgi-bin/"
 	WXINURL     = "http://in.qyapi.weixin.qq.com/cgi-bin/tencent/"
 	CORPID      = ""
@@ -79,6 +80,45 @@ type ResultUserid struct {
 	UserList    []UserInfo `json:"user_list"`
 }
 
+type StaffInfo struct {
+	Name		string
+	Phone		string
+}
+
+type Config struct {
+	Chatid				string
+	StaffList			[]StaffInfo
+	NoticeDuty			string
+	NoticePerson		string
+	NoticeDailyReport   string
+	NoticeWeekReport    string
+}
+
+var Conf Config
+
+func readContent(file string) string {
+	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		panic(err)
+	}
+	return string(data)
+}
+
+func writeContent(file string, content string) {
+	data := []byte(content)
+	err := ioutil.WriteFile(file, data, 0644)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func readConfig(conf string) {
+	file, _ := os.Open(conf)
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+	decoder.Decode(&Conf)
+}
+
 func getToken(corpid string, secret string) (string, error) {
 	baseurl := WXURL + "gettoken"
 	u, _ := url.Parse(baseurl)
@@ -116,7 +156,7 @@ func convertToUserid(token string, nameList []string) ([]UserInfo, error){
 	names := NameList {
 		NameList: nameList }
 	b, _ := json.Marshal(names)
-	fmt.Println(string(b))
+	log.Println(string(b))
 
 	body := bytes.NewBuffer([]byte(b))
 	res, err := http.Post(u.String(), "application/json;charset=utf-8", body)
@@ -129,7 +169,7 @@ func convertToUserid(token string, nameList []string) ([]UserInfo, error){
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(string(result))
+	log.Println(string(result))
 
 	var val ResultUserid
 	json.Unmarshal(result, &val)
@@ -150,7 +190,7 @@ func createChat(token string, name string, userList []string) (string, error) {
 		Name:     name,
 		UserList: userList }
 	b, _ := json.Marshal(chat)
-	fmt.Println(string(b))
+	log.Println(string(b))
 
 	body := bytes.NewBuffer([]byte(b))
 	res, err := http.Post(u.String(), "application/json;charset=utf-8", body)
@@ -163,7 +203,7 @@ func createChat(token string, name string, userList []string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Println(string(result))
+	log.Println(string(result))
 
 	var val ResultCreateChat
 	json.Unmarshal(result, &val)
@@ -187,7 +227,7 @@ func updateChat(token string, id string, name string, addUserList []string, delU
 		AddUserList: addUserList,
 		DelUserList: delUserList }
 	b, _ := json.Marshal(chat)
-	fmt.Println(string(b))
+	log.Println(string(b))
 
 	body := bytes.NewBuffer([]byte(b))
 	res, err := http.Post(u.String(), "application/json;charset=utf-8", body)
@@ -200,7 +240,7 @@ func updateChat(token string, id string, name string, addUserList []string, delU
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(result))
+	log.Println(string(result))
 
 	var val ReturnVal
 	json.Unmarshal(result, &val)
@@ -224,7 +264,7 @@ func sendMsg(token string, chatType string, id string, content string) error {
 	chat.Msgtype = "text"
 	chat.Text.Content = content
 	b, _ := json.Marshal(chat)
-	fmt.Println(string(b))
+	log.Println(string(b))
 
 	body := bytes.NewBuffer([]byte(b))
 	res, err := http.Post(u.String(), "application/json;charset=utf-8", body)
@@ -237,7 +277,7 @@ func sendMsg(token string, chatType string, id string, content string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(result))
+	log.Println(string(result))
 
 	var val ReturnVal
 	json.Unmarshal(result, &val)
@@ -253,7 +293,7 @@ func createChatTX(name string, userList string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(token)
+	log.Println(token)
 
 	users, err := convertToUserid(token, strings.Split(userList, ","))
 	if err != nil {
@@ -277,7 +317,7 @@ func updateChatTX(id string, name string, addList string, delList string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(token)
+	log.Println(token)
 
 	addUsers, err := convertToUserid(token, strings.Split(addList, ","))
 	if err != nil {
@@ -304,18 +344,104 @@ func updateChatTX(id string, name string, addList string, delList string) {
 	return
 }
 
-func sendMsgTX(chatType string, id string) {
+func sendMsgTX(content string, chatType string, id string) {
 	token, err := getToken(CORPID, SECRET)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(token)
+	log.Println("Token:" + token)
 
-	err = sendMsg(token, chatType, id, CONTENT)
+	err = sendMsg(token, chatType, id, content)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return
+}
+
+func getUserNo() int {
+	num := readContent("./record.log")
+	num = strings.TrimSpace(num)
+	n, _ := strconv.Atoi(num)
+	return n
+}
+
+func setUserNo(n int) {
+	num := strconv.Itoa(n)
+	writeContent("./record.log", num)
+}
+
+func getUserid(isLast bool) string {
+	token, err := getToken(CORPID, SECRET)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	n := getUserNo()
+	index := n % len(Conf.StaffList)
+	name := Conf.StaffList[index].Name
+
+	var list []string
+	list = append(list, name)
+	users, err := convertToUserid(token, list)
+	if err != nil {
+		log.Fatal(err)
+	}
+	id := users[0].Userid
+	log.Println("Get staff: " + users[0].Userid)
+	log.Println("Get staff: " + users[0].Name)
+	log.Println("Get staff: " + Conf.StaffList[index].Phone)
+
+	if isLast {
+		n++
+		setUserNo(n)
+	}
+
+	return id
+}
+
+func getStaffInfo() (string, string) {
+	n := getUserNo()
+	index := n % len(Conf.StaffList)
+	name := Conf.StaffList[index].Name
+	phone := Conf.StaffList[index].Phone
+	info := name + ", " + phone
+	cid := Conf.Chatid
+
+	return info, cid
+}
+
+func getSessionInfo(category string) (string, string, string) {
+	if category == "" {
+		log.Fatal("Category of message to send is empty")
+	}
+
+	var content string
+	var ctype string
+	var cid string
+	var info string
+
+	if category == "duty" {
+		content = Conf.NoticeDuty
+		ctype = "group"
+		info, cid = getStaffInfo()
+		content += info
+	} else if category == "person" {
+		content = Conf.NoticePerson
+		ctype = "single"
+		cid = getUserid(false)
+	} else if category == "daily" {
+		content = Conf.NoticeDailyReport
+		ctype = "single"
+		cid = getUserid(false)
+	} else if category == "week" {
+		content = Conf.NoticeWeekReport
+		ctype = "single"
+		cid = getUserid(true)
+	} else {
+		log.Fatal("Wrong category type")
+	}
+
+	return content, ctype, cid
 }
 
 func main() {
@@ -323,14 +449,19 @@ func main() {
 	ifUpdate := flag.Bool("u", false, "Update Chat")
 	ifSend   := flag.Bool("s", false, "Send Message")
 
+	// 1. duty 2. person 3. daily 4. week
+	category := flag.String("category", "", "Category of message to send")
+
 	id       := flag.String("id", "", "Chat ID")
 	name     := flag.String("name", "", "Chat Name")
-	chatType := flag.String("type", "group", "Chat Type")
+	chatType := flag.String("type", "", "Chat Type")
 	userList := flag.String("userlist", "", "User List")
 	addList  := flag.String("addlist", "", "Add User List")
 	delList  := flag.String("dellist", "", "Del User List")
 
 	flag.Parse()
+
+	readConfig("./conf.json")
 
 	if *ifCreate {
 		createChatTX(*name, *userList)
@@ -343,7 +474,13 @@ func main() {
 	}
 
 	if *ifSend {
-		sendMsgTX(*chatType, *id)
+		content := CONTENT
+		ctype   := *chatType
+		cid     := *id
+		if cid == "" || ctype == "" {
+			content, ctype, cid = getSessionInfo(*category)
+		}
+		sendMsgTX(content, ctype, cid)
 		os.Exit(0)
 	}
 
