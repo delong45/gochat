@@ -39,7 +39,7 @@ type UpdateChat struct {
 type TextChat struct {
 	Receiver struct {
 		Type	string  `json:"type"`
-		Id	    string  `json:"id"`
+		Id      string  `json:"id"`
 	} `json:"receiver"`
 	Msgtype		string  `json:"msgtype"`
 	Text struct {
@@ -52,7 +52,7 @@ type NameList struct {
 }
 
 type ReturnVal struct {
-	Errcode		int		`json:"errcode"`
+	Errcode     int     `json:"errcode"`
 	Errmsg	    string  `json:"errmsg"`
 }
 
