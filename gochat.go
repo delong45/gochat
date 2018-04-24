@@ -12,6 +12,7 @@ import (
 	"os"
 	"strings"
 	"strconv"
+	"time"
 )
 
 const (
@@ -86,12 +87,14 @@ type StaffInfo struct {
 }
 
 type Config struct {
-	Chatid              string
-	StaffList           []StaffInfo
-	NoticeDuty          string
-	NoticePerson        string
-	NoticeDailyReport   string
-	NoticeWeekReport    string
+	Chatid                  string
+	StaffList               []StaffInfo
+	NoticeDuty              string
+	NoticeTransition        string
+	NoticeTransitionWeekend string
+	NoticePerson            string
+	NoticeDailyReport       string
+	NoticeWeekReport        string
 }
 
 var Conf Config
@@ -404,7 +407,16 @@ func getStaffInfo() (string, string) {
 	index := n % len(Conf.StaffList)
 	name := Conf.StaffList[index].Name
 	phone := Conf.StaffList[index].Phone
-	info := name + ", " + phone
+	info := name
+	if Conf.NoticeTransition != "" {
+		t := time.Now()
+		weekday := t.Weekday().String()
+		if weekday == "Saturday" || weekday == "Sunday" {
+			info = name + ", " + Conf.NoticeTransitionWeekend + phone
+		} else {
+			info = name + ", " + Conf.NoticeTransition + phone
+		}
+	}
 	cid := Conf.Chatid
 
 	return info, cid
